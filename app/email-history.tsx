@@ -29,23 +29,42 @@ async function fetchEmails(): Promise<FetchResult> {
   }
 }
 
+const TIME_ZONE = "Asia/Taipei";
+
+// 2026-10-20 -> { date: "2026.10.20", weekday: "二" }
+const formatIssueDate = (ymd: string) => ({
+  date: ymd.replaceAll("-", "."),
+  weekday: new Date(`${ymd}T00:00:00+08:00`).toLocaleDateString("zh-TW", { timeZone: TIME_ZONE, weekday: "narrow" }),
+});
+
+const formatClock = (iso: string) =>
+  new Date(iso).toLocaleTimeString("zh-TW", { timeZone: TIME_ZONE, hour: "2-digit", minute: "2-digit", hour12: false });
+
 const formatDateTime = (iso: string) =>
   new Date(iso).toLocaleString("zh-TW", {
-    timeZone: "Asia/Taipei",
+    timeZone: TIME_ZONE,
+    year: "numeric",
     month: "2-digit",
     day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
+    hour12: false,
   });
 
-function StatusBadge({ status }: { status: EmailRecord["status"] }) {
-  return status === "sent" ? (
-    <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-950 dark:text-green-300">
-      已寄出
-    </span>
-  ) : (
-    <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-950 dark:text-red-300">
-      失敗
+const issueNo = (n: number) => `No.${String(n).padStart(2, "0")}`;
+
+// 印章風格的狀態標記
+function Seal({ status, size = "sm" }: { status: EmailRecord["status"]; size?: "sm" | "lg" }) {
+  const sent = status === "sent";
+  const dimension = size === "lg" ? "h-14 w-14 text-base" : "h-8 w-8 text-[0.65rem]";
+  return (
+    <span
+      title={sent ? "已寄出" : "寄送失敗"}
+      className={`inline-flex shrink-0 -rotate-12 items-center justify-center rounded-full border-2 font-medium ${dimension} ${
+        sent ? "border-accent text-accent" : "border-muted text-muted"
+      }`}
+    >
+      {sent ? "已寄" : "未達"}
     </span>
   );
 }
@@ -78,83 +97,137 @@ export default function EmailHistory() {
 
   // 預設選最新一筆；選取的紀錄不在清單中（例如重新整理後）也退回最新一筆
   const selected = emails.find((email) => email.id === selectedId) ?? emails[0];
+  // 期數：最舊的一封為 No.01
+  const numberOf = (email: EmailRecord) => emails.length - emails.indexOf(email);
+  const latest = emails[0] ? formatIssueDate(emails[0].brief.date) : null;
 
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 py-10 sm:px-8">
-      <header className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">寄信紀錄</h1>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            {loading ? "載入中…" : `共 ${emails.length} 筆，依寄送時間由新到舊`}
+    <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-5 py-10 sm:px-10 sm:py-14">
+      {/* 刊頭 */}
+      <header className="relative">
+        <div className="flex items-center justify-between font-display text-xs uppercase tracking-[0.35em] text-muted">
+          <span>The Morning Letter</span>
+          <span className="hidden sm:inline">Archive of Daily Briefs</span>
+        </div>
+        <div className="mt-6 flex items-end justify-between gap-6">
+          <div>
+            <h1 className="text-5xl font-light tracking-[0.35em] sm:text-7xl">每日晨報</h1>
+            <p className="mt-4 text-sm tracking-[0.4em] text-ink-soft">寄信紀錄・一日一信</p>
+          </div>
+          <p
+            aria-hidden
+            className="hidden text-lg tracking-[0.5em] text-accent [writing-mode:vertical-rl] sm:block"
+          >
+            日日是好日
           </p>
         </div>
-        <button
-          onClick={load}
-          disabled={loading}
-          className="rounded-full bg-foreground px-5 py-2 text-sm font-medium text-background transition-opacity hover:opacity-80 disabled:opacity-50"
-        >
-          {loading ? "更新中…" : "重新整理"}
-        </button>
+        <div className="mt-8 border-t-[3px] border-double border-ink" />
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-ink py-3 font-display text-sm tracking-[0.2em]">
+          <span>
+            {loading ? "Loading…" : `Vol. ${emails.length}`}
+            {latest && (
+              <span className="ml-4 text-muted">
+                {latest.date}（{latest.weekday}）
+              </span>
+            )}
+          </span>
+          <button
+            onClick={load}
+            disabled={loading}
+            className="border border-ink px-4 py-1 font-serif text-xs tracking-[0.3em] transition-colors hover:bg-ink hover:text-paper disabled:opacity-40"
+          >
+            {loading ? "更新中…" : "重新整理"}
+          </button>
+        </div>
       </header>
 
-      {error && <p className="rounded-xl bg-red-50 p-4 text-red-700 dark:bg-red-950 dark:text-red-300">讀取失敗：{error}</p>}
+      {error && <p className="mt-10 border-l-2 border-accent pl-4 text-sm text-accent">讀取失敗：{error}</p>}
 
       {!loading && !error && emails.length === 0 && (
-        <p className="py-20 text-center text-zinc-500">目前還沒有寄信紀錄，等排程寄出第一封信後就會出現在這裡。</p>
+        <p className="py-32 text-center tracking-[0.3em] text-muted">尚無寄信紀錄。待第一封信寄出，便會刊載於此。</p>
       )}
 
       {emails.length > 0 && selected && (
-        <div className="grid gap-6 md:grid-cols-[18rem_1fr]">
-          <nav className="flex max-h-[70vh] flex-col gap-2 overflow-y-auto md:sticky md:top-6 md:self-start">
-            {emails.map((email) => (
-              <button
-                key={email.id}
-                onClick={() => setSelectedId(email.id)}
-                className={`rounded-xl border p-3 text-left transition-colors ${
-                  email.id === selected.id
-                    ? "border-foreground bg-white dark:bg-zinc-900"
-                    : "border-black/[.08] hover:bg-black/[.03] dark:border-white/[.145] dark:hover:bg-white/[.05]"
-                }`}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-medium">{email.brief.date}</span>
-                  <StatusBadge status={email.status} />
-                </div>
-                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">寄送於 {formatDateTime(email.createdAt)}</p>
-              </button>
-            ))}
+        <div className="mt-12 grid gap-14 md:grid-cols-[14rem_1fr] md:gap-12">
+          {/* 目次 */}
+          <nav className="md:sticky md:top-10 md:self-start">
+            <h2 className="mb-4 flex items-baseline gap-3 border-b border-ink pb-2">
+              <span className="text-base tracking-[0.4em]">目次</span>
+              <span className="font-display text-xs uppercase tracking-[0.3em] text-muted">Contents</span>
+            </h2>
+            <ul className="max-h-[60vh] overflow-y-auto">
+              {emails.map((email) => {
+                const active = email.id === selected.id;
+                const { date, weekday } = formatIssueDate(email.brief.date);
+                return (
+                  <li key={email.id}>
+                    <button
+                      onClick={() => setSelectedId(email.id)}
+                      className={`group flex w-full items-center gap-3 border-b border-dotted border-rule py-3 text-left transition-colors ${
+                        active ? "text-accent" : "hover:text-accent"
+                      }`}
+                    >
+                      <span className="w-12 shrink-0 font-display text-sm italic">{issueNo(numberOf(email))}</span>
+                      <span className="flex-1">
+                        <span className="block font-display text-base tracking-wider">
+                          {date}
+                          <span className="ml-1 font-serif text-xs">（{weekday}）</span>
+                        </span>
+                        <span className="block font-display text-xs tracking-widest text-muted">
+                          {formatClock(email.createdAt)}
+                        </span>
+                      </span>
+                      <Seal status={email.status} />
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
           </nav>
 
-          <div className="flex min-w-0 flex-col gap-6">
-            <section className="rounded-2xl border border-black/[.08] bg-white p-6 text-sm shadow-sm dark:border-white/[.145] dark:bg-zinc-900">
-              <div className="mb-3 flex flex-wrap items-center gap-3">
-                <h2 className="text-lg font-semibold">{selected.subject}</h2>
-                <StatusBadge status={selected.status} />
+          {/* 本期內容 */}
+          <article className="min-w-0">
+            <header className="mb-14 flex items-start justify-between gap-6">
+              <div className="min-w-0">
+                <p className="font-display text-sm italic tracking-[0.3em] text-accent">
+                  Issue {issueNo(numberOf(selected))}
+                </p>
+                <h2 className="mt-3 text-2xl leading-relaxed font-medium tracking-[0.15em] sm:text-3xl">
+                  {selected.subject}
+                </h2>
+                <dl className="mt-6 grid grid-cols-[auto_1fr] gap-x-6 gap-y-1.5 text-xs tracking-wider text-ink-soft">
+                  <dt className="tracking-[0.3em] text-muted">寄件</dt>
+                  <dd className="break-all">{selected.from}</dd>
+                  <dt className="tracking-[0.3em] text-muted">收件</dt>
+                  <dd className="break-all">{selected.to}</dd>
+                  <dt className="tracking-[0.3em] text-muted">發送</dt>
+                  <dd className="font-display text-sm">{formatDateTime(selected.createdAt)}</dd>
+                  {selected.resendId && (
+                    <>
+                      <dt className="tracking-[0.3em] text-muted">編號</dt>
+                      <dd className="break-all font-mono text-[0.7rem]">{selected.resendId}</dd>
+                    </>
+                  )}
+                  {selected.error && (
+                    <>
+                      <dt className="tracking-[0.3em] text-muted">錯誤</dt>
+                      <dd className="text-accent">{selected.error}</dd>
+                    </>
+                  )}
+                </dl>
               </div>
-              <dl className="grid gap-x-6 gap-y-1 text-zinc-600 sm:grid-cols-[auto_1fr] dark:text-zinc-300">
-                <dt className="text-zinc-400">寄件人</dt>
-                <dd className="break-all">{selected.from}</dd>
-                <dt className="text-zinc-400">收件人</dt>
-                <dd className="break-all">{selected.to}</dd>
-                <dt className="text-zinc-400">寄送時間</dt>
-                <dd>{formatDateTime(selected.createdAt)}</dd>
-                {selected.resendId && (
-                  <>
-                    <dt className="text-zinc-400">Resend ID</dt>
-                    <dd className="break-all font-mono text-xs leading-5">{selected.resendId}</dd>
-                  </>
-                )}
-                {selected.error && (
-                  <>
-                    <dt className="text-zinc-400">錯誤</dt>
-                    <dd className="text-red-600 dark:text-red-400">{selected.error}</dd>
-                  </>
-                )}
-              </dl>
-            </section>
+              <Seal status={selected.status} size="lg" />
+            </header>
 
             <BriefView brief={selected.brief} />
-          </div>
+
+            <footer className="mt-20 text-center">
+              <p className="tracking-[1em] text-muted">— 完 —</p>
+              <p className="mt-3 font-display text-xs uppercase tracking-[0.3em] text-muted">
+                Edited by AI · Delivered by Resend
+              </p>
+            </footer>
+          </article>
         </div>
       )}
     </main>
