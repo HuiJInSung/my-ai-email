@@ -15,12 +15,13 @@ const LATIN = "Georgia,'Times New Roman',serif";
 
 const PAPER = "#f3eee4";
 const PAPER_DEEP = "#e9e2d4";
-const INK = "#2b2724";
-const INK_SOFT = "#5b544c";
-const MUTED = "#948b7e";
-const RULE = "#cfc5b4";
-const ACCENT = "#a3432c";
-const MOSS = "#5e6b4e";
+// 與網頁相同的配色（文字對比皆 ≥ 4.5:1）
+const INK = "#1f1b18";
+const INK_SOFT = "#433c35";
+const MUTED = "#6b6256";
+const RULE = "#bfb3a0";
+const ACCENT = "#963520";
+const MOSS = "#4a5a3a";
 
 const KANJI_NUMERALS = ["一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];
 

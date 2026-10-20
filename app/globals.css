@@ -1,27 +1,27 @@
 @import "tailwindcss";
 
-/* 日式雜誌風：紙張底色、墨色文字、朱色點綴 */
+/* 日式雜誌風：紙張底色、墨色文字、朱色點綴（文字對比皆 ≥ 4.5:1） */
 :root {
   --paper: #f3eee4;
   --paper-deep: #e9e2d4;
-  --ink: #2b2724;
-  --ink-soft: #5b544c;
-  --muted: #948b7e;
-  --rule: #cfc5b4;
-  --accent: #a3432c;
-  --moss: #5e6b4e;
+  --ink: #1f1b18;
+  --ink-soft: #433c35;
+  --muted: #6b6256;
+  --rule: #bfb3a0;
+  --accent: #963520;
+  --moss: #4a5a3a;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --paper: #1d1b18;
     --paper-deep: #262320;
-    --ink: #ebe5d9;
-    --ink-soft: #c3bbae;
-    --muted: #8c8478;
-    --rule: #3d3833;
-    --accent: #d0705a;
-    --moss: #9aab84;
+    --ink: #f4efe6;
+    --ink-soft: #d8d0c3;
+    --muted: #aaa194;
+    --rule: #4a443d;
+    --accent: #e58a72;
+    --moss: #a9ba92;
   }
 }
 

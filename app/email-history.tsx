@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { DailyBrief } from "@/lib/daily-brief";
 import BriefView from "./brief-view";
+import TodayHeadlines from "./today-headlines";
 
 type EmailRecord = {
   id: string;
@@ -50,6 +51,9 @@ const formatDateTime = (iso: string) =>
     minute: "2-digit",
     hour12: false,
   });
+
+// 「每日晨報 <onboarding@resend.dev>」-> 「onboarding@resend.dev」，避免與刊頭重複
+const emailAddress = (from: string) => from.match(/<([^>]+)>/)?.[1] ?? from;
 
 const issueNo = (n: number) => `No.${String(n).padStart(2, "0")}`;
 
@@ -100,6 +104,7 @@ export default function EmailHistory() {
   // 期數：最舊的一封為 No.01
   const numberOf = (email: EmailRecord) => emails.length - emails.indexOf(email);
   const latest = emails[0] ? formatIssueDate(emails[0].brief.date) : null;
+  const selectedDate = selected ? formatIssueDate(selected.brief.date) : null;
 
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-5 py-10 sm:px-10 sm:py-14">
@@ -147,7 +152,7 @@ export default function EmailHistory() {
         <p className="py-32 text-center tracking-[0.3em] text-muted">尚無寄信紀錄。待第一封信寄出，便會刊載於此。</p>
       )}
 
-      {emails.length > 0 && selected && (
+      {emails.length > 0 && selected && selectedDate && (
         <div className="mt-12 grid gap-14 md:grid-cols-[14rem_1fr] md:gap-12">
           {/* 目次 */}
           <nav className="md:sticky md:top-10 md:self-start">
@@ -155,7 +160,8 @@ export default function EmailHistory() {
               <span className="text-base tracking-[0.4em]">目次</span>
               <span className="font-display text-xs uppercase tracking-[0.3em] text-muted">Contents</span>
             </h2>
-            <ul className="max-h-[60vh] overflow-y-auto">
+            {/* 印章旋轉後會略超出邊界，留右側空間並關閉橫向捲動，避免出現水平捲軸 */}
+            <ul className="max-h-[60vh] overflow-x-hidden overflow-y-auto pr-1">
               {emails.map((email) => {
                 const active = email.id === selected.id;
                 const { date, weekday } = formatIssueDate(email.brief.date);
@@ -192,12 +198,14 @@ export default function EmailHistory() {
                 <p className="font-display text-sm italic tracking-[0.3em] text-accent">
                   Issue {issueNo(numberOf(selected))}
                 </p>
-                <h2 className="mt-3 text-2xl leading-relaxed font-medium tracking-[0.15em] sm:text-3xl">
-                  {selected.subject}
+                {/* 刊頭已有「每日晨報」，這裡只顯示日期，不重複信件主旨 */}
+                <h2 className="mt-3 font-display text-3xl tracking-[0.15em] sm:text-4xl">
+                  {selectedDate.date}
+                  <span className="ml-2 font-serif text-xl sm:text-2xl">（{selectedDate.weekday}）</span>
                 </h2>
                 <dl className="mt-6 grid grid-cols-[auto_1fr] gap-x-6 gap-y-1.5 text-xs tracking-wider text-ink-soft">
                   <dt className="tracking-[0.3em] text-muted">寄件</dt>
-                  <dd className="break-all">{selected.from}</dd>
+                  <dd className="break-all">{emailAddress(selected.from)}</dd>
                   <dt className="tracking-[0.3em] text-muted">收件</dt>
                   <dd className="break-all">{selected.to}</dd>
                   <dt className="tracking-[0.3em] text-muted">發送</dt>
@@ -230,6 +238,8 @@ export default function EmailHistory() {
           </article>
         </div>
       )}
+
+      <TodayHeadlines />
     </main>
   );
 }

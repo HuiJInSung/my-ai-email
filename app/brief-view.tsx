@@ -2,9 +2,6 @@ import type { DailyBrief } from "@/lib/daily-brief";
 
 const KANJI_NUMERALS = ["一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];
 
-const formatTime = (iso: string) =>
-  new Date(iso).toLocaleTimeString("zh-TW", { timeZone: "Asia/Taipei", hour: "2-digit", minute: "2-digit", hour12: false });
-
 // 雜誌式段落標題：編號、英文小標、中文標題、細線
 function Section({
   no,
@@ -44,9 +41,9 @@ const Note = ({ children }: { children: React.ReactNode }) => (
   <p className="mt-5 text-sm leading-7 text-ink-soft">{children}</p>
 );
 
-// 顯示一份晨報的所有段落：寄語、天氣、股價、編輯選讀、國內新聞
+// 顯示一份晨報的所有段落：寄語、天氣、股價、編輯選讀
 export default function BriefView({ brief }: { brief: DailyBrief }) {
-  const { weather, stock, news, summary } = brief;
+  const { weather, stock, summary } = brief;
   const errors = brief.errors ?? {};
   // 台股慣例：漲用朱色、跌用苔綠
   const changeColor = stock && stock.change > 0 ? "text-accent" : stock && stock.change < 0 ? "text-moss" : "text-muted";
@@ -60,7 +57,7 @@ export default function BriefView({ brief }: { brief: DailyBrief }) {
               「
             </span>
             <p className="mb-5 text-sm tracking-[0.25em] text-ink-soft">{summary.greeting}</p>
-            <blockquote className="text-xl leading-[2.1] font-light sm:text-2xl sm:leading-[2.1]">
+            <blockquote className="text-xl leading-[2.1] sm:text-2xl sm:leading-[2.1]">
               {summary.encouragement}
             </blockquote>
             <span aria-hidden className="-mt-4 block text-right font-display text-7xl leading-none text-accent/30">
@@ -133,32 +130,6 @@ export default function BriefView({ brief }: { brief: DailyBrief }) {
           </ol>
         </Section>
       )}
-
-      <Section
-        no="05"
-        label={news ? news.source : "Taiwan News"}
-        title={news && !news.isToday ? "國內新聞（當日無新文・最新）" : "國內新聞"}
-        error={errors.news}
-      >
-        {news && (
-          <ul className="gap-10 md:columns-2">
-            {news.items.map((item) => (
-              <li key={item.link} className="mb-7 break-inside-avoid border-b border-rule pb-6">
-                <p className="mb-2 font-display text-xs tracking-[0.3em] text-muted">{formatTime(item.publishedAt)}</p>
-                <a
-                  href={item.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-base leading-7 font-medium decoration-accent decoration-1 underline-offset-4 hover:underline"
-                >
-                  {item.title}
-                </a>
-                <p className="mt-2 text-sm leading-7 text-ink-soft">{item.snippet}</p>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Section>
     </div>
   );
 }
