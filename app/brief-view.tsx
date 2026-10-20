@@ -44,7 +44,7 @@ const Note = ({ children }: { children: React.ReactNode }) => (
   <p className="mt-5 text-sm leading-7 text-ink-soft">{children}</p>
 );
 
-// 顯示一份晨報的所有段落：寄語、天氣、股價、編輯選讀、科技新聞
+// 顯示一份晨報的所有段落：寄語、天氣、股價、編輯選讀、國內新聞
 export default function BriefView({ brief }: { brief: DailyBrief }) {
   const { weather, stock, news, summary } = brief;
   const errors = brief.errors ?? {};
@@ -136,8 +136,8 @@ export default function BriefView({ brief }: { brief: DailyBrief }) {
 
       <Section
         no="05"
-        label={news ? news.source : "Tech News"}
-        title={news && !news.isToday ? "科技新聞（當日無新文・最新）" : "科技新聞"}
+        label={news ? news.source : "Taiwan News"}
+        title={news && !news.isToday ? "國內新聞（當日無新文・最新）" : "國內新聞"}
         error={errors.news}
       >
         {news && (

@@ -19,7 +19,7 @@ const cormorant = Cormorant_Garamond({
 
 export const metadata: Metadata = {
   title: "每日晨報",
-  description: "今日天氣、台積電股價、科技新聞與 AI 鼓勵",
+  description: "今日天氣、台積電股價、國內新聞與 AI 鼓勵",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

@@ -25,7 +25,7 @@ export async function summarizeBrief(input: unknown): Promise<BriefSummary> {
   "greeting": "一句早安問候",
   "weatherSummary": "今天天氣重點與穿著或帶傘建議",
   "stockSummary": "台積電最近一個交易日的表現摘要",
-  "newsHighlights": ["3 到 5 則最值得關注的科技新聞，每則一句話"],
+  "newsHighlights": ["3 到 5 則最值得關注的台灣國內新聞，每則一句話，語氣客觀中立"],
   "encouragement": "結合以上資訊、真誠具體的鼓勵話語，2 到 3 句"
 }
 若某項資料缺失（值為 null），請在對應欄位簡短說明資料暫時無法取得。`,

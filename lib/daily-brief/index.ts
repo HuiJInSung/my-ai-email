@@ -1,14 +1,14 @@
 import { taipeiDate } from "./date";
 import { getTodayWeather, type Weather } from "./weather";
 import { getLastTradingDayQuote, type StockQuote } from "./stock";
-import { getTodayTechNews, type TechNews } from "./news";
+import { getTodayLocalNews, type LocalNews } from "./news";
 import { summarizeBrief, type BriefSummary } from "./summarize";
 
 export type DailyBrief = {
   date: string;
   weather: Weather | null;
   stock: StockQuote | null;
-  news: TechNews | null;
+  news: LocalNews | null;
   summary: BriefSummary | null;
   errors: Record<string, string>;
 };
@@ -20,7 +20,7 @@ export async function getDailyBrief(): Promise<DailyBrief> {
   const [weather, stock, news] = await Promise.allSettled([
     getTodayWeather(),
     getLastTradingDayQuote(),
-    getTodayTechNews(),
+    getTodayLocalNews(),
   ]);
 
   const errors: Record<string, string> = {};
